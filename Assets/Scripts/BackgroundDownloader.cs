@@ -8,10 +8,13 @@ public class BackgroundDownloader : MonoBehaviour
 {
     private SpriteRenderer background;
     private Page pageInfo;
+    [SerializeField] Texture2D[] defaultBackgrounds;
+
     // Start is called before the first frame update
     void Start()
     {
         background = gameObject.GetComponent<SpriteRenderer>();
+        setBackgroundFromDefault();
         StartCoroutine(getPexelsPageInfo());
     }
 
@@ -23,10 +26,16 @@ public class BackgroundDownloader : MonoBehaviour
         request.SetRequestHeader("Authorization", "563492ad6f917000010000011fdbc331304044c7a77a9734d2988ab2");
         yield return request.SendWebRequest();
         if (request.isNetworkError || request.isHttpError)
-            Debug.Log(request.error);
+        {
+            yield return new WaitForSeconds(10f);
+            StartCoroutine(getPexelsPageInfo());
+        }
         else
         {
             pageInfo = JsonConvert.DeserializeObject<Page>(request.downloadHandler.text);
+            Debug.Log(pageInfo.PerPage + " " + pageInfo.TotalResults);
+            yield return new WaitForSeconds(10f);
+            StartCoroutine(changeBackground());
         }
     }
 
@@ -38,7 +47,7 @@ public class BackgroundDownloader : MonoBehaviour
         requestImage.SetRequestHeader("Authorization", "563492ad6f917000010000011fdbc331304044c7a77a9734d2988ab2");
         yield return requestImage.SendWebRequest();
         if (requestImage.isNetworkError || requestImage.isHttpError)
-            Debug.Log(requestImage.error);
+            setBackgroundFromDefault();
         else
         {
             Texture2D image = ((DownloadHandlerTexture)requestImage.downloadHandler).texture;
@@ -49,9 +58,9 @@ public class BackgroundDownloader : MonoBehaviour
     
 
     // Update is called once per frame
-    void Update()
+    private void setBackgroundFromDefault()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-            StartCoroutine(changeBackground());
+        int backgroundChoosen = Random.Range(0, defaultBackgrounds.Length);
+        background.sprite = Sprite.Create(defaultBackgrounds[backgroundChoosen], new Rect(0f, 0f, defaultBackgrounds[backgroundChoosen].width, defaultBackgrounds[backgroundChoosen].height), Vector2.zero);
     }
 }

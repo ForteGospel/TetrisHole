@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
@@ -8,6 +9,8 @@ public class BoardController : MonoBehaviour
 {
     [SerializeField] GameObject blockPrefab;
     [SerializeField] Sprite[] blockSprite;
+    [SerializeField] GameObject scoreText;
+    private int score;
     private Image background;
     private RawImage rawImage;
 
@@ -27,7 +30,9 @@ public class BoardController : MonoBehaviour
 
 
     private Block[] piece;
+    private Block[] nextPiece;
     private int regularPieceCounter = 0;
+    private int nextPieceNum;
 
 
     private int w = 10;
@@ -52,9 +57,13 @@ public class BoardController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        score = 0;
+        scoreText.GetComponent<TextMeshProUGUI>().text = score.ToString();
         block = new Block[w, h];
-        generateBlockPiece();
+        generateBlockPiece(Random.Range(0, shapes.GetLength(0)));
         regularPieceCounter++;
+        nextPieceNum = Random.Range(0, shapes.GetLength(0));
+        generateNextBlockPiece(nextPieceNum);
     }
 
     // Update is called once per frame
@@ -77,17 +86,21 @@ public class BoardController : MonoBehaviour
                 for (int i = 0; i < piece.Length; i++)
                 {
                     if (piece[i].y > 0)
-                        Debug.Log("gameover");
+                        GameObject.Find("LevelManager").gameObject.GetComponent<LevelManager>().LoadNextLevel();
+                        //Debug.Log("gameover");
                     block[piece[i].x, -piece[i].y] = piece[i];
                 }
 
                 if (regularPieceCounter < 10)
                 {
-                    generateBlockPiece();
+                    generateBlockPiece(nextPieceNum);
                     regularPieceCounter++;
+                    nextPieceNum = Random.Range(0, shapes.GetLength(0));
+                    generateNextBlockPiece(nextPieceNum);
                 }
                 else
                 {
+                    StartCoroutine(GameObject.Find("Background").GetComponent<BackgroundDownloader>().changeBackground());
                     generateHoledPiece();
                     regularPieceCounter = 0;
                 }
@@ -97,7 +110,7 @@ public class BoardController : MonoBehaviour
         }
     }
 
-    private void generateBlockPiece()
+    private void generateBlockPiece(int nextPieceNum)
     {
         piece = new Block[4]
         {
@@ -106,15 +119,45 @@ public class BoardController : MonoBehaviour
             new Block(),
             new Block()
         };
-        int n = Random.Range(0, shapes.GetLength(0));
-        Sprite sprite = blockSprite[Random.Range(0, blockSprite.Length)];
+        //int n = Random.Range(0, shapes.GetLength(0));
+        //Sprite sprite = blockSprite[Random.Range(0, blockSprite.Length)];
+        Sprite sprite = blockSprite[nextPieceNum];
 
         for (int i = 0; i < piece.Length; i++)
         {
-            piece[i].x = (shapes[n, i] % 2) + 2;
-            piece[i].y = (-shapes[n, i] / 2) + 4;
+            piece[i].x = (shapes[nextPieceNum, i] % 2) + 2;
+            piece[i].y = (-shapes[nextPieceNum, i] / 2) + 4;
 
             piece[i].ob = Instantiate(blockPrefab, new Vector2(piece[i].x, piece[i].y), Quaternion.identity);
+            SpriteRenderer sr = piece[i].ob.GetComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+        }
+    }
+
+    private void generateNextBlockPiece(int nextPieceNum)
+    {
+        if (nextPiece != null)
+        {
+            foreach (Block block in nextPiece)
+                Destroy(block.ob);
+        }
+        nextPiece = new Block[4]
+        {
+            new Block(),
+            new Block(),
+            new Block(),
+            new Block()
+        };
+        //int n = Random.Range(0, shapes.GetLength(0));
+        //Sprite sprite = blockSprite[Random.Range(0, blockSprite.Length)];
+        Sprite sprite = blockSprite[nextPieceNum];
+
+        for (int i = 0; i < piece.Length; i++)
+        {
+            nextPiece[i].x = (shapes[nextPieceNum, i] % 2) + 2;
+            nextPiece[i].y = (-shapes[nextPieceNum, i] / 2) + 4;
+
+            nextPiece[i].ob = Instantiate(blockPrefab, new Vector2(nextPiece[i].x + 9, nextPiece[i].y - 4), Quaternion.identity);
             SpriteRenderer sr = piece[i].ob.GetComponent<SpriteRenderer>();
             sr.sprite = sprite;
         }
@@ -153,9 +196,7 @@ public class BoardController : MonoBehaviour
             }
         }
         else
-            generateBlockPiece();
-        
-
+            generateBlockPiece(nextPieceNum);
     }
 
     public void movePieceLeft()
@@ -260,6 +301,8 @@ public class BoardController : MonoBehaviour
                 {
                     Destroy(block.ob);
                 }
+                score += 100;
+                scoreText.GetComponent<TextMeshProUGUI>().text = score.ToString();
             }
 
             for (int j = 0; j < w; j++)
@@ -267,16 +310,6 @@ public class BoardController : MonoBehaviour
                 if (block[j, i].ob != null)
                     block[j, i].ob.transform.position = new Vector2(block[j, i].x, block[j, i].y);
             }
-        }
-    }
-
-    IEnumerator ListObjectDestroyer(List<Block> blocksToClear)
-    {
-        foreach (Block block in blocksToClear)
-        {
-            block.ob.GetComponent<AnimatorController>().TriggerPopup();
-            yield return new WaitForSeconds(1f);
-            Destroy(block.ob);
         }
     }
 }
