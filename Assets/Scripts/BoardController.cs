@@ -1,11 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
+using UnityEngine.UI;
 
 public class BoardController : MonoBehaviour
 {
     [SerializeField] GameObject blockPrefab;
     [SerializeField] Sprite[] blockSprite;
+    private Image background;
+    private RawImage rawImage;
 
     private struct Block
     {
@@ -154,6 +158,21 @@ public class BoardController : MonoBehaviour
 
     }
 
+    public void movePieceLeft()
+    {
+        movePiece(-1, 0);
+    }
+
+    public void movePieceRight()
+    {
+        movePiece(1, 0);
+    }
+
+    public void movePieceDown()
+    {
+        movePiece(0, -1);
+    }
+
     private bool movePiece (int x, int y)
     {
         Block[] origin = piece.Clone() as Block[];
@@ -168,7 +187,7 @@ public class BoardController : MonoBehaviour
         return setPiece(origin);
     }
 
-    private void rotatePiece()
+    public void rotatePiece()
     {
         Block[] origin = piece.Clone() as Block[];
         Block p = piece[1];
@@ -238,7 +257,9 @@ public class BoardController : MonoBehaviour
             {
                 y += -1;
                 foreach (Block block in blocksToClear)
+                {
                     Destroy(block.ob);
+                }
             }
 
             for (int j = 0; j < w; j++)
@@ -246,6 +267,16 @@ public class BoardController : MonoBehaviour
                 if (block[j, i].ob != null)
                     block[j, i].ob.transform.position = new Vector2(block[j, i].x, block[j, i].y);
             }
+        }
+    }
+
+    IEnumerator ListObjectDestroyer(List<Block> blocksToClear)
+    {
+        foreach (Block block in blocksToClear)
+        {
+            block.ob.GetComponent<AnimatorController>().TriggerPopup();
+            yield return new WaitForSeconds(1f);
+            Destroy(block.ob);
         }
     }
 }
