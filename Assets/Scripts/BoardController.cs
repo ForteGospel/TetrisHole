@@ -64,6 +64,8 @@ public class BoardController : MonoBehaviour
         regularPieceCounter++;
         nextPieceNum = Random.Range(0, shapes.GetLength(0));
         generateNextBlockPiece(nextPieceNum);
+        GameObject.Find("AdsManager").gameObject.GetComponent<AdsController>().showBanner();
+        StartCoroutine(showAdsWaitForSeconds(20f));
     }
 
     // Update is called once per frame
@@ -310,6 +312,15 @@ public class BoardController : MonoBehaviour
                 if (block[j, i].ob != null)
                     block[j, i].ob.transform.position = new Vector2(block[j, i].x, block[j, i].y);
             }
+        }
+    }
+
+    IEnumerator showAdsWaitForSeconds(float seconds)
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(seconds);
+            StartCoroutine(GameObject.Find("adsManager").gameObject.GetComponent<AdsController>().showBanner());
         }
     }
 }
