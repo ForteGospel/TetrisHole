@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/EasyMobile/Demo/Scenes/Modules/AdvertisingDemo.unity
+    guid: 15c4a3e17095016469a5675e72669efb
+  - enabled: 1
     path: Assets/Scenes/StartMenu.unity
     guid: aa50bc6b5a2ca50439d3528c2e80ff2f
   - enabled: 1
